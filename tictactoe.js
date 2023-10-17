@@ -1,101 +1,71 @@
 "use strict";
 
-const ticTacToe = (xName, oName) => {
-  const X = "X"; // 🐍
-  const O = "O"; // 🪜
+const createTicTacToeGame = (xName, oName) => {
+  let currentPlayer = "X";
+  let gameStatus = "ongoing";
 
   const players = {
     X: xName,
     O: oName,
   };
 
-  //   Visual representation of Data Structure
-  const board = [
-    "ongoing", // ongoing, win-x,win-o,draw
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-  ];
+  const board = Array(10).fill(null);
 
-  const currentPlayer = X;
-
-  // concept's lookup table
-  const nextPlayer = {
-    X: O,
-    O: X,
-  };
-
-  function isValidMove(move) {
-    // move should bet the right index not already taken one
-    return 1 <= move && move <= 9 && board[move] === "";
-  }
-
-  function computeStatus() {
-    const result = "ongoing";
-
-    const winningCombos = [
-      // rows
+  const checkForWin = (player) => {
+    const winPatterns = [
       [1, 2, 3],
       [4, 5, 6],
       [7, 8, 9],
-      // columns
       [1, 4, 7],
       [2, 5, 8],
       [3, 6, 9],
-      //diagonals
       [1, 5, 9],
-      [3, 5, 8],
+      [3, 5, 7],
     ];
 
-    // check for a win X
-    //  check for a win O
-    winningCombos.forEach(([i1, i2, i3]) => {
-      if (
-        board[i1] === board[i2] &&
-        board[i2] === board[i3] &&
-        board[i3] === currentPlayer
-      ) {
-        result = `win-${currentPlayer}`;
-      }
-    });
-    // check for draw
-    let isTaken = false;
-    for (let i = 0; i <= 9; i++) {
-      if (board[i] !== "") {
-        isTaken = true;
-      }
-    }
-    if (isTaken) return "draw";
-
-    // continue the game
-    return result;
-  }
-
-  return (player, move) => {
-    // validate right player : return <error> if not
-    if (player !== currentPlayer) {
-      return [false, `Not your turn. It's ${currentPlayer}'s turn.`];
-    }
-    // validate the right move: return <error> if not
-    if (!isValidMove(move)) {
-      return [false, "Invalid move, try again!"];
-    }
-    board[move] = currentPlayer;
-    board[0] = computeStatus();
-    currentPlayer = nextPlayer[currentPlayer];
-    // progress the game:
-    // 1. update the game
-    // 2. update the game status
-    // 3. change the current player
-    // return player
-    return [true, board];
+    return winPatterns.some(
+      ([a, b, c]) =>
+        board[a] === player && board[b] === player && board[c] === player
+    );
   };
+
+  const isBoardFull = () => board.slice(1).every((cell) => cell !== null);
+
+  const isValidMove = (move) => move >= 1 && move <= 9 && board[move] === null;
+
+  const computeStatus = () => {
+    if (checkForWin("X")) {
+      return "win-X";
+    } else if (checkForWin("O")) {
+      return "win-O";
+    } else if (isBoardFull()) {
+      return "draw";
+    } else {
+      return "ongoing";
+    }
+  };
+
+  const makeMove = (player, move) => {
+    if (gameStatus !== "ongoing") {
+      return [false, "The game has already ended."];
+    }
+
+    if (player !== currentPlayer) {
+      return [false, `It's not ${player}'s turn.`];
+    }
+
+    if (!isValidMove(move)) {
+      return [false, "Invalid move. Try again."];
+    }
+
+    board[move] = currentPlayer;
+    gameStatus = computeStatus();
+    currentPlayer = currentPlayer === "X" ? "O" : "X";
+
+    return [true, board.slice(1)];
+  };
+
+  return makeMove;
 };
 
-module.exports = { ticTacToe };
+module.exports = { createTicTacToeGame };
